@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Store Audit">
+<meta name="theme-color" content="#1f6b4a">
+<title>Vista Store Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: one-column field clipboard — sticky score bar, stacked section cards, tap-to-grade rows */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --sunk:#e8ece6; --fg:#18201b; --muted:#5b665e; --line:#d5dcd3;
+  --accent:#1f6b4a; --accent-fg:#ffffff; --accent-soft:#dcefe4;
+  --g1:#c43d2f; --g2:#d9762b; --g3:#c9a227; --g4:#6f9d34; --g5:#2c8a4e; --na:#7a847c;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#1a211c; --sunk:#232c26; --fg:#e7ede8; --muted:#9aa79e; --line:#2f3a33;
+  --accent:#4fbf86; --accent-fg:#0d1a12; --accent-soft:#1f3a2b;
+  --g1:#e2604f; --g2:#ec9150; --g3:#dcbb45; --g4:#93c257; --g5:#4fbf86; --na:#8c978f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#1a211c; --sunk:#232c26; --fg:#e7ede8; --muted:#9aa79e; --line:#2f3a33;
+  --accent:#4fbf86; --accent-fg:#0d1a12; --accent-soft:#1f3a2b;
+  --g1:#e2604f; --g2:#ec9150; --g3:#dcbb45; --g4:#93c257; --g5:#4fbf86; --na:#8c978f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;padding:10px max(16px,env(safe-area-inset-left,0px))}
+.top-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand h1{font-size:20px;line-height:1.1}
+.brand span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px;flex-shrink:0}
+.seg button{border:0;background:transparent;color:var(--muted);padding:6px 10px;border-radius:6px;font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px;border-bottom:2px solid transparent;font-weight:600;font-family:var(--display);font-size:16px;letter-spacing:.02em}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.progress{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.live{font-family:var(--display);font-weight:700;font-size:15px;color:var(--fg)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+input[type=text],input[type=date],textarea,select{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+textarea{resize:vertical;min-height:70px}
+details.scale summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent);list-style:none}
+details.scale summary::-webkit-details-marker{display:none}
+.scale-list{display:grid;gap:6px;margin-top:10px}
+.scale-row{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:13.5px}
+.chip{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;color:#fff;font-weight:700;font-family:var(--display);font-size:17px}
+
+/* sections */
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}
+.sec-head h2{font-size:21px;line-height:1.15}
+.sec-head h2 small{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;display:block;text-transform:uppercase;margin-bottom:2px}
+.sec-meta{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sec-meta b{font-family:var(--display);font-size:22px;display:block;line-height:1}
+.sec-meta span{font-size:12px;color:var(--muted)}
+.sec.collapsed .qs{display:none}
+.q{padding:14px 0;border-top:1px solid var(--line)}
+.q:first-child{margin-top:12px}
+.q-text{display:grid;grid-template-columns:28px 1fr;gap:6px;font-size:15px}
+.q-num{font-family:var(--display);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.grades{display:grid;grid-template-columns:repeat(5,1fr) 1.1fr;gap:6px;margin-top:10px;padding-left:34px}
+@media (max-width:420px){.grades{padding-left:0}}
+.gbtn{height:44px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font-family:var(--display);font-weight:700;font-size:19px;transition:background .12s,border-color .12s,color .12s}
+.gbtn.na{font-size:14px;letter-spacing:.04em}
+.gbtn[aria-pressed="true"]{color:#fff;border-color:transparent}
+.gbtn[data-v="1"][aria-pressed="true"]{background:var(--g1)}
+.gbtn[data-v="2"][aria-pressed="true"]{background:var(--g2)}
+.gbtn[data-v="3"][aria-pressed="true"]{background:var(--g3)}
+.gbtn[data-v="4"][aria-pressed="true"]{background:var(--g4)}
+.gbtn[data-v="5"][aria-pressed="true"]{background:var(--g5)}
+.gbtn[data-v="na"][aria-pressed="true"]{background:var(--na)}
+.note-toggle{margin:8px 0 0 34px;border:0;background:none;color:var(--accent);font-size:13px;font-weight:600;padding:4px 0}
+@media (max-width:420px){.note-toggle{margin-left:0}}
+.note{margin:6px 0 0 34px}
+@media (max-width:420px){.note{margin-left:0}}
+.q.flag .q-num{color:var(--g1)}
+
+/* results */
+.results h2{font-size:24px}
+.final{display:flex;align-items:center;gap:16px;margin:12px 0 4px}
+.final-num{font-family:var(--display);font-size:54px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.final-lbl{font-weight:600}
+.final-lbl small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.rows{display:grid;gap:8px;margin-top:12px}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 120px 40px;gap:10px;align-items:center;font-size:14px}
+.rrow .mini{height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.rrow .mini i{display:block;height:100%}
+@media (max-width:480px){.rrow{grid-template-columns:minmax(0,1fr) 64px 40px}}
+.rrow b{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--display);font-size:17px}
+.rrow span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flags{margin-top:14px;display:grid;gap:6px}
+.flag-item{display:grid;grid-template-columns:30px 1fr;gap:8px;font-size:13.5px;align-items:start}
+.empty{color:var(--muted);font-size:14px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:11px 16px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.danger{color:var(--g1)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.status{font-size:13.5px;margin-top:10px;min-height:1.2em}
+.status.ok{color:var(--g5)} .status.err{color:var(--g1)}
+.confirm{margin-top:10px;padding:12px;border-radius:9px;background:var(--sunk);font-size:14px}
+
+/* history */
+.hist-list{display:grid;gap:10px;margin-top:14px}
+.hist{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;color:var(--fg);width:100%}
+.hist .score{font-family:var(--display);font-size:26px;font-weight:700;color:#fff;border-radius:9px;height:48px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.hist h3{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.toolbar input{flex:1;min-width:160px}
+.detail-q{display:grid;grid-template-columns:30px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.detail-q em{display:block;color:var(--muted);font-style:normal;margin-top:2px}
+/* photos */
+.photos{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.ph-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ph{position:relative;width:76px;height:76px;border-radius:9px;overflow:hidden;background:var(--sunk);flex-shrink:0}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph a{display:block;width:100%;height:100%}
+.ph .x{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center}
+.ph.busy::after{content:"";position:absolute;inset:0;background:var(--sunk);opacity:.7}
+.ph.busy .spin{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--fg);z-index:1;font-weight:600}
+.ph-add{width:76px;height:76px;border-radius:9px;border:1.5px dashed var(--line);background:transparent;color:var(--accent);font-weight:600;font-size:12px;display:grid;place-items:center;text-align:center;line-height:1.2;padding:4px}
+.ph-add b{display:block;font-size:22px;line-height:1}
+.ph-msg{font-size:12.5px;color:var(--muted);margin-top:6px}
+.ph-msg.err{color:var(--g1)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand"><h1 id="t-title">Store Audit</h1><span id="t-sub">Quality &amp; Food Safety · Short Form</span></div>
+      <div class="seg" role="group" aria-label="Language">
+        <button id="lang-en" aria-pressed="true">EN</button><button id="lang-es" aria-pressed="false">ES</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-form" aria-selected="true">New audit</button>
+      <button role="tab" id="tab-hist" aria-selected="false">History</button>
+    </div>
+    <div class="progress" id="prog"><div class="bar"><i id="prog-bar"></i></div><span id="prog-txt">0 / 50</span><span class="live" id="prog-live">–</span></div>
+  </header>
+
+  <main id="view-form">
+    <section class="card">
+      <div class="grid2">
+        <div><label class="label" for="f-store" id="l-store">Store</label><input type="text" id="f-store" list="store-list" autocomplete="off" placeholder="e.g. Central"><datalist id="store-list"></datalist></div>
+        <div><label class="label" for="f-date" id="l-date">Date</label><input type="date" id="f-date"></div>
+        <div><label class="label" for="f-auditor" id="l-auditor">Auditor</label><input type="text" id="f-auditor" autocomplete="name"></div>
+        <div><label class="label" for="f-manager" id="l-manager">Manager on duty</label><input type="text" id="f-manager"></div>
+      </div>
+      <details class="scale" id="scale" style="margin-top:14px"><summary id="l-scale">Grading scale ▾</summary><div class="scale-list" id="scale-list"></div></details>
+    </section>
+
+    <div id="sections"></div>
+
+    <section class="card results" id="results">
+      <h2 id="l-results">Audit results</h2>
+      <div class="final"><div class="final-num" id="r-final">–</div><div class="final-lbl" id="r-final-lbl">Final grade<small>Average of section scores</small></div></div>
+      <div class="rows" id="r-rows"></div>
+      <h3 style="margin-top:18px;font-size:17px" id="l-flags">Needs action (scored 1–2)</h3>
+      <div class="flags" id="r-flags"></div>
+      <label class="label" for="f-plan" style="margin-top:16px" id="l-plan">Action plan / follow-up</label>
+      <textarea id="f-plan" rows="4"></textarea>
+      <div class="actions">
+        <button class="btn primary" id="b-submit">Submit audit</button>
+        <button class="btn" id="b-copy">Copy summary</button>
+        <button class="btn danger" id="b-clear">Start over</button>
+      </div>
+      <div class="confirm" id="clear-confirm" hidden><span id="l-clear-q">Clear every answer on this form?</span>
+        <div class="actions" style="margin-top:8px"><button class="btn danger" id="b-clear-yes">Clear form</button><button class="btn" id="b-clear-no">Keep</button></div></div>
+      <div class="status" id="status" role="status"></div>
+    </section>
+  </main>
+
+  <main id="view-hist" hidden>
+    <div class="toolbar">
+      <input type="text" id="h-search" placeholder="Filter by store or auditor">
+      <button class="btn" id="b-csv" hidden>Export CSV</button>
+    </div>
+    <div class="hist-list" id="h-list"><p class="empty" id="h-empty">Loading submitted audits…</p></div>
+    <section class="card" id="h-detail" hidden></section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== SETTINGS — paste your Supabase project values here ===== */
+const CONFIG = {
+  SUPABASE_URL: "https://uplaxcwnhicggztytppt.supabase.co",        // e.g. https://abcd1234.supabase.co
+  SUPABASE_ANON_KEY: "PASTE_SUPABASE_ANON_KEY_HERE",
+  TABLE: "store_audits",
+  BUCKET: "audit-photos"
+};
+/* ============================================================== */
+const SB_READY = /^https:\/\//.test(CONFIG.SUPABASE_URL) && !/PASTE_/.test(CONFIG.SUPABASE_ANON_KEY) && window.supabase;
+const sb = SB_READY ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+const photoUrl = path => sb ? sb.storage.from(CONFIG.BUCKET).getPublicUrl(path).data.publicUrl : "";
+const SECTIONS = [{"en": "Receiving", "es": "Recepción de productos", "q": [["Is the receiving area clean, including the floors, walls, and ceiling, and free of unnecessary objects?", "¿El área de recepción está limpia, incluyendo el piso, las paredes y el techo, y libre de objetos innecesarios?"], ["Are the quantities of products received verified against the purchase order?", "¿Se verifica que las cantidades de los productos a la llegada coincidan con la orden solicitada?"], ["Are product temperatures and conditions checked upon receipt to ensure products are not damaged or packaging is not broken?", "¿Se revisan las temperaturas y condiciones del producto al recibirlo, que no estén dañados o rotos?"], ["Are expiration dates and labels checked?", "¿Se verifican las fechas de caducidad y etiquetas?"], ["Are missing, damaged, or substandard products reported promptly?", "¿Se reportan oportunamente productos faltantes, dañados o que no cumplan los estándares de calidad?"], ["Are products stored in a clean and orderly manner?", "¿Los productos se encuentran almacenados de una manera limpia y ordenada?"], ["Are product temperatures properly maintained during receiving to prevent breaking the cold chain?", "¿Se cuida la temperatura de todos los productos a la recepción para no romper la cadena de frio?"], ["Are designated storage locations established for products, and are they consistently followed?", "¿Se tienen espacios predeterminados para los productos y se respetan?"], ["Is the receiving area free of pests?", "¿El área se encuentra libre de plagas?"]]}, {"en": "Storage", "es": "Almacenamiento", "q": [["Are refrigerator temperatures maintained between 32°F and 39.2°F (0°C and 4°C)?", "¿Las temperaturas de los refrigeradores se encuentran entre 32°F y 39.2° F (0°C y 4°C)?"], ["Are freezer temperatures maintained below -10°F (-12°C)?", "¿Las temperaturas de los congeladores se encuentran por debajo de -10°F (-12°C)?"], ["Is product rotation followed using FIFO (First In, First Out)?", "¿Se respeta la rotación de los productos PEPS (Primeras entradas, primeras salidas)?"], ["Are products properly organized and stored off the floor?", "¿Los productos permanecen organizados y separados del piso?"], ["Are refrigerators clean?", "¿Los refrigeradores se encuentran limpios?"], ["Are freezers clean?", "¿Los congeladores se encuentran limpios?"], ["Are all products properly identified and labeled?", "¿Todos los productos se encuentran bien identificados y con etiqueta?"], ["If there are any rejected products, are they properly identified?", "¿En caso de que existan productos rechazados, estos se encuentran identificados?"], ["Are storage areas free of unnecessary items, including personal belongings?", "¿Las áreas de almacenamiento se encuentran libres de objetos innecesarios incluyendo objetos personales?"]]}, {"en": "Product Quality", "es": "Calidad del Producto", "q": [["Do the products have acceptable odor, color, texture, and taste?", "¿Los productos presentan olor, color, textura y sabor aceptables?"], ["Are all products available for sale within their approved shelf life?", "¿Los productos disponibles para venta se encuentran dentro de su vida útil autorizada?"], ["Are product temperatures in warmers and bain-maries checked? (Temperatures must be maintained between 140°F and 150°F / 60°C and 66°C.)", "¿Se verifica la temperatura de los productos en warmers y baños maría? (La temperatura tiene que estar entre 140°F y 150°F = 60°C y 66°C)?"], ["If a temperature below 135°F (57°C) is detected, is corrective action taken and documented?", "¿En caso de que se haya detectado una temperatura menor a 135°F   ( 57°C) se toma y se documenta una acción correctiva?"], ["Are products continuously monitored for foreign materials, contamination, spoilage, or any abnormalities that may affect product quality?", "¿Se revisa constantemente que no exista materia extraña, contaminación, deterioro o cualquier anomalía que afecte la calidad de los productos?"], ["Are all products visually inspected immediately before being served to the customer?", "¿Se realiza una inspección visual a todos los productos exactamente antes de entregárselos al cliente?"]]}, {"en": "Food Preparation Area and Practices", "es": "Area de preparación de alimentos y prácticas", "q": [["Are products thawed under refrigeration?", "¿La descongelación de los productos se lleva a cabo bajo refrigeración?"], ["Is cross-contamination prevented during food handling?", "¿Se previene la contaminación cruzada durante la manipulación de alimentos?"], ["Are all food preparation utensils, containers, and equipment clean and in good condition?", "¿Todos los utensilios, recipientes y equipos de preparación,  se encuentran limpios y en buen estado?"], ["Are allergenic products properly separated?", "¿Se lleva una separación de productos alérgenos?"], ["Are reheated foods heated to an internal temperature of 167°F (75°C) for 15 seconds?", "¿Para alimentos recalentados se respeta una temperatura interna de 167°F (75°C) por 15 segundos?"], ["Is the service station thoroughly clean?", "¿La estación de servicio se encuentra completamente limpia?"], ["Are food items from the service station that are saved for the following day subjected to a rapid cooling process?", "¿Los alimentos de la estación de servicio que se guardan para el día siguiente se someten a un proceso de enfriamiento rápido?"]]}, {"en": "Cleaning & Sanitation", "es": "Limpieza y Desinfección", "q": [["Are tables, preparation areas, and equipment clean and sanitized?", "¿Las mesas, áreas de preparación y equipos están limpios y sanitizados?"], ["Are Deli floors, walls, drains, and surfaces clean and free of food debris?", "¿Los pisos, paredes, drenajes y superficies del Deli se encuentran limpios y sin restos de comida?"], ["Are restrooms clean?", "¿Los baños se encuentran limpios?"], ["Is the three-compartment sink used correctly, with degreasing detergent in the first compartment, water for rinsing in the second, and sanitizer in the third?", "¿Se utiliza correctamente el fregadero de tres compartimientos utilizando jabón desengrasante en el primero, agua para enjuagar en el segundo y sanitizante en el tercero?"], ["Are all chemical products properly labeled?", "¿Todos los productos químicos se encuentran etiquetados?"], ["Is sanitizer used for wiping cloths?", "¿Utilizan sanitizante para los trapos?"], ["Is all trash removed at the end of the day?", "¿Al final del día se sacan todas las basuras?"]]}, {"en": "GMPs & Personal Hygiene", "es": "Buenas Prácticas de Manufactura (BPM) e Higiene Personal", "q": [["Does the staff comply with handwashing, hair restraint, and personal hygiene requirements?", "¿El personal cumple con lavado de manos, protección del cabello y normas de higiene?"], ["Does the staff follow the rules prohibiting jewelry, requiring short fingernails and clean uniforms or clothing, and prohibiting eating, smoking, and chewing gum in food preparation areas?", "¿El personal respeta las reglas de no usar joyería, traer uñas cortas, uniforme o ropa limpia, no comer, no fumar y no mascar chicle en el area de preparación de alimentos?"], ["Do employees have the required Food Handler training and apply good food handling practices?", "¿Los empleados cuentan con la capacitación Food Handler requerida y aplican buenas prácticas de manipulación?"], ["Are work areas and walkways free of obstructions and obvious safety hazards?", "¿Las áreas de trabajo y rutas de circulación están libres de obstrucciones y riesgos evidentes?"]]}, {"en": "Inventory & Documentation", "es": "Inventario y Documentación", "q": [["Is inventory of EPPF products conducted and recorded at least twice per week?", "¿Se realiza y registra el inventario de productos EPPF por lo menos 2 veces por semana?"], ["Are orders sent to the Commissary one day in advance, before 12:00 p.m., and are any shortages communicated?", "¿Se envían las órdenes a Comisaría un día antes de las 12pm y se comunican los faltantes?"], ["Are waste, returns, and customer complaints documented?", "¿Se documentan desperdicios (waste), devoluciones y quejas?"], ["Is the cleaning of all areas monitored and recorded on a log that includes the date, time, and name of the person who performed the cleaning?", "¿Se lleva un monitoreo de la limpieza de todas las áreas en una hoja con hora, fecha y persona que la realizó?"]]}, {"en": "Training and Customer Service", "es": "Entrenamiento y Atención al Cliente", "q": [["Does the staff know the food preparation procedures?", "¿El personal conoce los procedimientos de preparación?"], ["Does the staff understand customer service standards?", "¿El personal conoce los estándares de atención al cliente?"], ["Does the staff understand basic safety rules, including slip and fall prevention, fire extinguisher use, and proper lifting techniques?", "¿El personal conoce las reglas básicas de seguridad, incluyendo resbalones, caídas, extinguidores y cómo levantar objetos pesados?"], ["Does the staff know how to handle a conflict with a customer?", "¿El personal sabe qué hacer en caso de tener un conflicto con algún cliente?"]]}];
+const SCALE = [
+  {en:["Unsatisfactory","Fails to meet job expectations; immediate improvement is required."],es:["Insatisfactorio","No cumple con las expectativas del puesto; requiere una mejora inmediata."]},
+  {en:["Needs Improvement","Partially meets expectations; requires additional supervision or training."],es:["Necesita mejora","Cumple parcialmente con las expectativas; requiere supervisión o capacitación adicional."]},
+  {en:["Satisfactory","Meets expectations and requirements."],es:["Satisfactorio / Bueno","Cumple con las expectativas y requisitos."]},
+  {en:["Very Good","Meets expectations and occasionally exceeds them."],es:["Muy bueno","Cumple con las expectativas y ocasionalmente las supera."]},
+  {en:["Excellent","Exceeds expectations."],es:["Excelente","Supera las expectativas."]}
+];
+const T = {
+  en:{title:"Store Audit",sub:"Quality & Food Safety · Short Form",tabForm:"New audit",tabHist:"History",store:"Store",date:"Date",auditor:"Auditor",manager:"Manager on duty",scale:"Grading scale ▾",section:"Section",results:"Audit results",final:"Final grade",finalSub:"Average of section scores",flags:"Needs action (scored 1–2)",noFlags:"Nothing scored 1 or 2.",plan:"Action plan / follow-up",submit:"Submit audit",copy:"Copy summary",clear:"Start over",clearQ:"Clear every answer on this form?",clearYes:"Clear form",keep:"Keep",addNote:"+ Add observation",hideNote:"− Hide observation",na:"N/A",needStore:"Add the store name before submitting.",needGrades:"Grade at least one question before submitting.",saving:"Submitting…",saved:"Audit submitted. It now shows under History.",saveErr:"Couldn't submit: ",noDb:"The form isn't connected to the database yet. Use Copy summary to keep a record.",copied:"Summary copied.",copyErr:"Copy blocked here. Select the text below and copy it manually.",filter:"Filter by store or auditor",loading:"Loading submitted audits…",noHist:"No audits submitted yet. Completed audits appear here after you tap Submit.",histOff:"History isn't connected yet. Add the Supabase settings to turn it on.",slow:"Still connecting… history may be out of date.",csv:"Export CSV",back:"← Back to list",answered:"graded",by:"by",obs:"Observation",del:"Delete audit",delQ:"Delete this audit permanently?",photos:"Photos",addPhoto:"Add photo",uploading:"Uploading…",phOff:"Photo uploads aren't set up yet.",phLoading:"Checking photo access…",phErr:"Photo didn't upload: ",phBig:"Photo is too large.",phQuota:"Photo storage is full.",phWait:"Wait for photos to finish uploading.",remove:"Remove photo",grade:["","Unsatisfactory","Needs Improvement","Satisfactory","Very Good","Excellent"]},
+  es:{title:"Auditoría de Tienda",sub:"Calidad y Seguridad Alimentaria · Formato corto",tabForm:"Nueva auditoría",tabHist:"Historial",store:"Tienda",date:"Fecha",auditor:"Auditor",manager:"Gerente en turno",scale:"Escala de evaluación ▾",section:"Sección",results:"Resultados de la auditoría",final:"Calificación final",finalSub:"Promedio de las secciones",flags:"Requiere acción (calificación 1–2)",noFlags:"Nada calificado con 1 o 2.",plan:"Plan de acción / seguimiento",submit:"Enviar auditoría",copy:"Copiar resumen",clear:"Empezar de nuevo",clearQ:"¿Borrar todas las respuestas de este formulario?",clearYes:"Borrar formulario",keep:"Conservar",addNote:"+ Agregar observación",hideNote:"− Ocultar observación",na:"N/A",needStore:"Escribe el nombre de la tienda antes de enviar.",needGrades:"Califica al menos una pregunta antes de enviar.",saving:"Enviando…",saved:"Auditoría enviada. Ya aparece en Historial.",saveErr:"No se pudo enviar: ",noDb:"El formulario aún no está conectado a la base de datos. Usa Copiar resumen para conservar el registro.",copied:"Resumen copiado.",copyErr:"No se pudo copiar aquí. Selecciona el texto de abajo y cópialo manualmente.",filter:"Filtrar por tienda o auditor",loading:"Cargando auditorías…",noHist:"Aún no hay auditorías enviadas. Aparecerán aquí al tocar Enviar.",histOff:"El historial aún no está conectado. Agrega la configuración de Supabase.",slow:"Conectando… el historial puede no estar actualizado.",csv:"Exportar CSV",back:"← Volver a la lista",answered:"calificadas",by:"por",obs:"Observación",del:"Eliminar auditoría",delQ:"¿Eliminar esta auditoría permanentemente?",photos:"Fotos",addPhoto:"Agregar foto",uploading:"Subiendo…",phOff:"La subida de fotos aún no está configurada.",phLoading:"Verificando acceso a fotos…",phErr:"La foto no se subió: ",phBig:"La foto es demasiado grande.",phQuota:"El almacenamiento de fotos está lleno.",phWait:"Espera a que terminen de subir las fotos.",remove:"Quitar foto",grade:["","Insatisfactorio","Necesita mejora","Satisfactorio","Muy bueno","Excelente"]}
+};
+const TOTAL = SECTIONS.reduce((n,s)=>n+s.q.length,0);
+const $ = id => document.getElementById(id);
+const gColor = v => v==null||isNaN(v) ? "var(--na)" : `var(--g${Math.min(5,Math.max(1,Math.round(v)))})`;
+const fmt = v => v==null||isNaN(v) ? "–" : v.toFixed(2);
+const today = () => { const d=new Date(); return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); };
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let lang = "en";
+let state = blank();
+function blank(){ return {store:"",date:today(),auditor:"",manager:"",grades:{},notes:{},plan:"",photos:{}}; }
+try{ const d=JSON.parse(localStorage.getItem("audit-draft")||"null"); if(d&&d.grades) state=Object.assign(blank(),d); const l=localStorage.getItem("audit-lang"); if(l==="es"||l==="en") lang=l; }catch(e){}
+let saveTimer; function saveDraft(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ try{localStorage.setItem("audit-draft",JSON.stringify(state));}catch(e){} },300); }
+
+// numbering
+let n=0; SECTIONS.forEach(s=>s.q.forEach((q,i)=>{ n++; s.nums=s.nums||[]; s.nums.push(n); }));
+
+function compute(grades){
+  const secs = SECTIONS.map(s=>{ const vals=s.nums.map(k=>grades[k]).filter(v=>typeof v==="number"); return vals.length? vals.reduce((a,b)=>a+b,0)/vals.length : null; });
+  const have = secs.filter(v=>v!=null);
+  return {secs, final: have.length? have.reduce((a,b)=>a+b,0)/have.length : null};
+}
+
+function buildForm(){
+  const t=T[lang];
+  $("sections").innerHTML = SECTIONS.map((s,si)=>`
+    <section class="card sec" id="sec-${si}">
+      <div class="sec-head" data-sec="${si}" role="button" tabindex="0" aria-expanded="true">
+        <h2><small>${t.section} ${si+1}</small>${esc(s[lang])}</h2>
+        <div class="sec-meta"><b id="sa-${si}">–</b><span id="sc-${si}">0/${s.q.length}</span></div>
+      </div>
+      <div class="qs">${s.q.map((q,qi)=>{ const k=s.nums[qi]; return `
+        <div class="q" id="q-${k}">
+          <div class="q-text"><span class="q-num">${k}</span><span>${esc(q[lang==="en"?0:1])}</span></div>
+          <div class="grades" role="group" aria-label="Grade question ${k}">
+            ${[1,2,3,4,5].map(v=>`<button class="gbtn" data-k="${k}" data-v="${v}" aria-pressed="false" title="${t.grade[v]}">${v}</button>`).join("")}
+            <button class="gbtn na" data-k="${k}" data-v="na" aria-pressed="false">${t.na}</button>
+          </div>
+          <button class="note-toggle" data-note="${k}" id="nt-${k}">${t.addNote}</button>
+          <div class="note" id="nw-${k}" hidden><textarea id="n-${k}" rows="2" placeholder="${t.obs}"></textarea></div>
+        </div>`;}).join("")}
+        <div class="photos">
+          <span class="label">${t.photos}</span>
+          <div class="ph-row" id="phr-${si}"></div>
+          <input type="file" id="pf-${si}" accept="image/*" multiple hidden>
+          <div class="ph-msg" id="phm-${si}"></div>
+        </div>
+      </div>
+    </section>`).join("");
+  SECTIONS.forEach((s,si)=>renderPhotos(si));
+  $("scale-list").innerHTML = SCALE.map((s,i)=>`<div class="scale-row"><span class="chip" style="background:var(--g${i+1})">${i+1}</span><span><b>${esc(s[lang][0])}</b> — ${esc(s[lang][1])}</span></div>`).join("");
+  // restore values
+  for(const k in state.notes){ const ta=$("n-"+k); if(ta&&state.notes[k]){ ta.value=state.notes[k]; $("nw-"+k).hidden=false; $("nt-"+k).textContent=t.hideNote; } }
+  refresh();
+}
+
+function applyText(){
+  const t=T[lang];
+  document.documentElement.lang=lang;
+  $("t-title").textContent=t.title; $("t-sub").textContent=t.sub;
+  $("tab-form").textContent=t.tabForm; $("tab-hist").textContent=t.tabHist;
+  $("l-store").textContent=t.store; $("l-date").textContent=t.date; $("l-auditor").textContent=t.auditor; $("l-manager").textContent=t.manager;
+  $("l-scale").textContent=t.scale; $("l-results").textContent=t.results;
+  $("r-final-lbl").innerHTML=`${t.final}<small>${t.finalSub}</small>`;
+  $("l-flags").textContent=t.flags; $("l-plan").textContent=t.plan;
+  $("b-submit").textContent=t.submit; $("b-copy").textContent=t.copy; $("b-clear").textContent=t.clear;
+  $("l-clear-q").textContent=t.clearQ; $("b-clear-yes").textContent=t.clearYes; $("b-clear-no").textContent=t.keep;
+  $("h-search").placeholder=t.filter; $("b-csv").textContent=t.csv;
+  $("lang-en").setAttribute("aria-pressed",lang==="en"); $("lang-es").setAttribute("aria-pressed",lang==="es");
+}
+
+function refresh(){
+  const t=T[lang];
+  document.querySelectorAll(".gbtn").forEach(b=>{ const g=state.grades[b.dataset.k]; const v=b.dataset.v; b.setAttribute("aria-pressed", String(v==="na"? g==="na" : g===+v)); });
+  const {secs,final}=compute(state.grades);
+  let answered=0;
+  SECTIONS.forEach((s,si)=>{ const c=s.nums.filter(k=>state.grades[k]!=null).length; answered+=c; $("sc-"+si).textContent=`${c}/${s.q.length}`; const el=$("sa-"+si); el.textContent=fmt(secs[si]); el.style.color=secs[si]==null?"var(--muted)":gColor(secs[si]);
+    s.nums.forEach(k=>$("q-"+k).classList.toggle("flag", state.grades[k]===1||state.grades[k]===2)); });
+  $("prog-bar").style.width=(answered/TOTAL*100)+"%";
+  $("prog-txt").textContent=`${answered} / ${TOTAL} ${t.answered}`;
+  $("prog-live").textContent=fmt(final); $("prog-live").style.color=final==null?"var(--muted)":gColor(final);
+  $("r-final").textContent=fmt(final); $("r-final").style.color=final==null?"var(--muted)":gColor(final);
+  $("r-rows").innerHTML=SECTIONS.map((s,si)=>`<div class="rrow"><span>${si+1}. ${esc(s[lang])}</span><div class="mini"><i style="width:${secs[si]==null?0:secs[si]/5*100}%;background:${gColor(secs[si])}"></i></div><b style="color:${secs[si]==null?"var(--muted)":gColor(secs[si])}">${fmt(secs[si])}</b></div>`).join("");
+  const flags=[]; SECTIONS.forEach(s=>s.q.forEach((q,qi)=>{ const k=s.nums[qi]; const g=state.grades[k]; if(g===1||g===2) flags.push({k,g,q:q[lang==="en"?0:1],note:state.notes[k]}); }));
+  $("r-flags").innerHTML = flags.length? flags.map(f=>`<div class="flag-item"><span class="chip" style="background:var(--g${f.g});width:26px;height:26px;font-size:15px">${f.g}</span><span><b>#${f.k}</b> ${esc(f.q)}${f.note?`<br><span style="color:var(--muted)">${esc(f.note)}</span>`:""}</span></div>`).join("") : `<p class="empty">${t.noFlags}</p>`;
+}
+
+// ---------- photos ----------
+let assets=null, assetsState="loading", pending=0;
+const pendingBySec={};
+function renderPhotos(si){
+  const row=$("phr-"+si); if(!row) return; const t=T[lang];
+  const ids=(state.photos&&state.photos[si])||[];
+  let h=ids.map(id=>`<div class="ph"><a href="${esc(photoUrl(id))}" target="_blank" rel="noopener"><img src="${esc(photoUrl(id))}" alt="" loading="lazy"></a><button class="x" data-rm="${si}:${esc(id)}" aria-label="${t.remove}">×</button></div>`).join("");
+  for(let i=0;i<(pendingBySec[si]||0);i++) h+=`<div class="ph busy"><span class="spin">${t.uploading}</span></div>`;
+  if(assets) h+=`<button class="ph-add" data-addph="${si}"><span><b>+</b>${t.addPhoto}</span></button>`;
+  row.innerHTML=h;
+  const m=$("phm-"+si);
+  if(m && !m.classList.contains("err")) m.textContent = assets? "" : (assetsState==="loading"? t.phLoading : t.phOff);
+}
+function shrink(file){
+  return new Promise(res=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{ const max=1600; let w=img.naturalWidth,h=img.naturalHeight; const r=Math.min(1,max/Math.max(w,h)); w=Math.round(w*r); h=Math.round(h*r);
+      const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+      c.toBlob(b=>res(b&&b.size?b:file),"image/jpeg",0.82); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(file); };
+    img.src=url;
+  });
+}
+async function addPhotos(si,files){
+  const t=T[lang]; const m=$("phm-"+si); m.classList.remove("err"); m.textContent="";
+  for(const f of files){
+    pending++; pendingBySec[si]=(pendingBySec[si]||0)+1; renderPhotos(si);
+    try{
+      const blob=await shrink(f);
+      const type=["image/jpeg","image/png","image/webp","image/gif"].includes(blob.type)?blob.type:"image/jpeg";
+      const r=await assets.upload(blob,{type});
+      (state.photos[si]=state.photos[si]||[]).push(r.id); saveDraft();
+    }catch(e){
+      const c=e&&e.code; m.classList.add("err");
+      m.textContent= c==="too_large"?t.phBig : c==="quota_or_state"?t.phQuota : t.phErr+((e&&e.message)||c||"error");
+    }finally{ pending--; pendingBySec[si]--; renderPhotos(si); }
+  }
+}
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-addph]"); if(a){ $("pf-"+a.dataset.addph).click(); return; }
+  const x=e.target.closest("[data-rm]");
+  if(x){ e.preventDefault(); const [si,id]=x.dataset.rm.split(":"); state.photos[si]=(state.photos[si]||[]).filter(v=>v!==id); saveDraft(); renderPhotos(+si); if(assets) assets.delete(id).catch(()=>{}); }
+});
+document.addEventListener("change",e=>{ const id=e.target.id; if(id&&id.startsWith("pf-")&&e.target.files.length){ const si=+id.slice(3); addPhotos(si,[...e.target.files]); e.target.value=""; } });
+
+function setStatus(msg,kind){ const s=$("status"); s.textContent=msg||""; s.className="status"+(kind?" "+kind:""); }
+
+// events
+document.addEventListener("click",e=>{
+  const g=e.target.closest(".gbtn");
+  if(g){ const k=g.dataset.k, v=g.dataset.v==="na"?"na":+g.dataset.v; state.grades[k]= state.grades[k]===v ? undefined : v; if(state.grades[k]===undefined) delete state.grades[k]; refresh(); saveDraft(); return; }
+  const nt=e.target.closest(".note-toggle");
+  if(nt){ const k=nt.dataset.note, w=$("nw-"+k); w.hidden=!w.hidden; nt.textContent=w.hidden?T[lang].addNote:T[lang].hideNote; if(!w.hidden) $("n-"+k).focus(); return; }
+  const sh=e.target.closest(".sec-head");
+  if(sh){ toggleSec(sh); }
+});
+document.addEventListener("keydown",e=>{ const sh=e.target.closest&&e.target.closest(".sec-head"); if(sh&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); toggleSec(sh);} });
+function toggleSec(sh){ const sec=sh.parentElement; sec.classList.toggle("collapsed"); sh.setAttribute("aria-expanded", String(!sec.classList.contains("collapsed"))); }
+document.addEventListener("input",e=>{
+  const id=e.target.id;
+  if(id.startsWith("n-")){ const k=id.slice(2); const v=e.target.value; if(v) state.notes[k]=v; else delete state.notes[k]; saveDraft(); clearTimeout(window._rf); window._rf=setTimeout(refresh,400); }
+  else if(id==="f-store") state.store=e.target.value;
+  else if(id==="f-date") state.date=e.target.value;
+  else if(id==="f-auditor") state.auditor=e.target.value;
+  else if(id==="f-manager") state.manager=e.target.value;
+  else if(id==="f-plan") state.plan=e.target.value;
+  else if(id==="h-search") renderHist();
+  else return;
+  saveDraft();
+});
+function fillFields(){ $("f-store").value=state.store; $("f-date").value=state.date; $("f-auditor").value=state.auditor; $("f-manager").value=state.manager; $("f-plan").value=state.plan; }
+
+function setLang(l){ lang=l; try{localStorage.setItem("audit-lang",l);}catch(e){} applyText(); buildForm(); renderHist(); if(openId) showDetail(openId); }
+$("lang-en").onclick=()=>setLang("en"); $("lang-es").onclick=()=>setLang("es");
+
+function setTab(which){ const f=which==="form"; $("view-form").hidden=!f; $("view-hist").hidden=f; $("prog").hidden=!f; $("tab-form").setAttribute("aria-selected",f); $("tab-hist").setAttribute("aria-selected",!f); window.scrollTo(0,0); }
+$("tab-form").onclick=()=>setTab("form"); $("tab-hist").onclick=()=>setTab("hist");
+
+$("b-clear").onclick=()=>{ $("clear-confirm").hidden=false; };
+$("b-clear-no").onclick=()=>{ $("clear-confirm").hidden=true; };
+$("b-clear-yes").onclick=()=>{ if(assets) Object.values(state.photos||{}).flat().forEach(id=>assets.delete(id).catch(()=>{})); const keep={auditor:state.auditor,store:state.store}; state=blank(); Object.assign(state,keep); try{localStorage.removeItem("audit-draft");}catch(e){} fillFields(); buildForm(); $("clear-confirm").hidden=true; setStatus(""); window.scrollTo(0,0); };
+
+function summaryText(a){
+  const t=T[lang]; const {secs,final}=compute(a.grades);
+  let s=`${t.title} — ${a.store||"?"} — ${a.date}\n${t.auditor}: ${a.auditor||"-"}${a.manager?` · ${t.manager}: ${a.manager}`:""}\n${t.final}: ${fmt(final)}\n\n`;
+  SECTIONS.forEach((sec,si)=>{ s+=`${si+1}. ${sec[lang]}: ${fmt(secs[si])}\n`; });
+  const fl=[]; SECTIONS.forEach(sec=>sec.q.forEach((q,qi)=>{ const k=sec.nums[qi]; const g=a.grades[k]; if(g===1||g===2) fl.push(`  #${k} (${g}) ${q[lang==="en"?0:1]}${a.notes&&a.notes[k]?` — ${a.notes[k]}`:""}`); }));
+  if(fl.length) s+=`\n${t.flags}:\n${fl.join("\n")}\n`;
+  const other=Object.keys(a.notes||{}).filter(k=>!(a.grades[k]===1||a.grades[k]===2)&&a.notes[k]);
+  if(other.length) s+=`\n${t.obs}:\n${other.map(k=>`  #${k}: ${a.notes[k]}`).join("\n")}\n`;
+  if(a.plan) s+=`\n${t.plan}:\n${a.plan}\n`;
+  return s;
+}
+async function copyText(txt){
+  try{ await navigator.clipboard.writeText(txt); setStatus(T[lang].copied,"ok"); }
+  catch(e){ setStatus(T[lang].copyErr,"err"); let ta=$("copy-fallback"); if(!ta){ ta=document.createElement("textarea"); ta.id="copy-fallback"; ta.rows=10; ta.style.marginTop="10px"; $("status").after(ta);} ta.value=txt; ta.select(); }
+}
+$("b-copy").onclick=()=>copyText(summaryText(state));
+
+// ---------- db ----------
+let db=null, audits=[], openId=null;
+$("b-submit").onclick=async()=>{
+  const t=T[lang];
+  if(!state.store.trim()){ setStatus(t.needStore,"err"); $("f-store").focus(); return; }
+  if(!Object.keys(state.grades).length){ setStatus(t.needGrades,"err"); return; }
+  if(!db){ setStatus(t.noDb,"err"); return; }
+  if(pending>0){ setStatus(t.phWait,"err"); return; }
+  const {secs,final}=compute(state.grades);
+  const doc={store:state.store.trim(),date:state.date,auditor:state.auditor.trim(),manager:state.manager.trim(),grades:state.grades,notes:state.notes,plan:state.plan,photos:state.photos||{},sectionScores:secs,final,lang,submittedAt:new Date().toISOString(),form:"short"};
+  $("b-submit").disabled=true; setStatus(t.saving);
+  try{ const {error}=await sb.from(CONFIG.TABLE).insert({store:doc.store,audit_date:doc.date||null,auditor:doc.auditor,final_grade:doc.final,data:doc}); if(error) throw error; loadHist(); setStatus(t.saved,"ok"); const keep={auditor:state.auditor}; state=blank(); Object.assign(state,keep); try{localStorage.removeItem("audit-draft");}catch(e){} fillFields(); buildForm(); }
+  catch(e){ setStatus(t.saveErr+(e&&e.message||e&&e.code||"error"),"err"); }
+  finally{ $("b-submit").disabled=false; }
+};
+
+function renderHist(){
+  const t=T[lang]; const list=$("h-list");
+  if(!list) return;
+  if(dbState==="off"){ list.innerHTML=`<p class="empty">${t.histOff}</p>`; return; }
+  if(dbState==="loading"){ list.innerHTML=`<p class="empty">${slow?t.slow:t.loading}</p>`; return; }
+  const q=$("h-search").value.trim().toLowerCase();
+  const rows=audits.filter(a=>!q||(a.store+" "+a.auditor).toLowerCase().includes(q));
+  $("store-list").innerHTML=[...new Set(audits.map(a=>a.store).filter(Boolean))].map(s=>`<option value="${esc(s)}">`).join("");
+  if(!rows.length){ list.innerHTML=`<p class="empty">${audits.length?"—":t.noHist}</p>`; return; }
+  list.innerHTML=(slow?`<p class="empty">${t.slow}</p>`:"")+rows.map(a=>`<button class="hist" data-id="${a.id}"><span class="score" style="background:${gColor(a.final)}">${fmt(a.final)}</span><span style="min-width:0"><h3>${esc(a.store)}</h3><p>${esc(a.date)} · ${t.by} ${esc(a.auditor||"—")}</p></span></button>`).join("");
+}
+$("h-list").addEventListener("click",e=>{ const b=e.target.closest(".hist"); if(b) showDetail(b.dataset.id); });
+
+function showDetail(id){
+  const a=audits.find(x=>x.id===id); if(!a) return; openId=id; const t=T[lang];
+  const {secs,final}=compute(a.grades||{});
+  $("h-list").hidden=true; document.querySelector(".toolbar").hidden=true;
+  const d=$("h-detail"); d.hidden=false;
+  d.innerHTML=`<button class="btn" id="b-back">${t.back}</button>
+    <h2 style="margin-top:14px;font-size:24px">${esc(a.store)}</h2>
+    <p class="empty" style="margin:4px 0 0">${esc(a.date)} · ${t.auditor}: ${esc(a.auditor||"—")}${a.manager?` · ${t.manager}: ${esc(a.manager)}`:""}</p>
+    <div class="final"><div class="final-num" style="color:${gColor(final)}">${fmt(final)}</div><div class="final-lbl">${t.final}<small>${t.finalSub}</small></div></div>
+    <div class="rows">${SECTIONS.map((s,si)=>`<div class="rrow"><span>${si+1}. ${esc(s[lang])}</span><div class="mini"><i style="width:${secs[si]==null?0:secs[si]/5*100}%;background:${gColor(secs[si])}"></i></div><b style="color:${gColor(secs[si])}">${fmt(secs[si])}</b></div>`).join("")}</div>
+    ${a.plan?`<h3 style="margin-top:18px;font-size:17px">${t.plan}</h3><p style="white-space:pre-wrap;margin:6px 0 0">${esc(a.plan)}</p>`:""}
+    <div style="margin-top:16px">${SECTIONS.map((s,si)=>`<h3 style="font-size:17px;margin-top:14px">${si+1}. ${esc(s[lang])}</h3>`+s.q.map((q,qi)=>{const k=s.nums[qi]; const g=(a.grades||{})[k]; return `<div class="detail-q"><span class="chip" style="width:26px;height:26px;font-size:14px;background:${g==null?"var(--sunk)":g==="na"?"var(--na)":`var(--g${g})`};color:${g==null?"var(--muted)":"#fff"}">${g==null?"·":g==="na"?"–":g}</span><span>${esc(q[lang==="en"?0:1])}${a.notes&&a.notes[k]?`<em>${esc(a.notes[k])}</em>`:""}</span></div>`;}).join("")+(((a.photos||{})[si]||[]).length?`<div class="ph-row" style="margin-top:8px">${a.photos[si].map(id=>`<div class="ph"><a href="${esc(photoUrl(id))}" target="_blank" rel="noopener"><img src="${esc(photoUrl(id))}" alt="" loading="lazy"></a></div>`).join("")}</div>`:"")).join("")}</div>
+    <div class="actions"><button class="btn" id="b-dcopy">${t.copy}</button></div>
+    <div class="status" id="d-status"></div>`;
+  $("b-back").onclick=closeDetail;
+  $("b-dcopy").onclick=async()=>{ const txt=summaryText(a); try{await navigator.clipboard.writeText(txt); $("d-status").textContent=t.copied;}catch(e){ $("d-status").textContent=t.copyErr; } };
+  window.scrollTo(0,0);
+}
+function closeDetail(){ openId=null; $("h-detail").hidden=true; $("h-list").hidden=false; document.querySelector(".toolbar").hidden=false; renderHist(); }
+
+// CSV export
+$("b-csv").onclick=async()=>{
+  if(!audits.length) return;
+  const head=["Store","Date","Auditor","Manager","Final",...SECTIONS.map((s,i)=>`S${i+1} ${s.en}`),...Array.from({length:TOTAL},(_,i)=>`Q${i+1}`),"Action plan","Photos"];
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[head.map(q).join(",")].concat(audits.map(a=>{ const {secs,final}=compute(a.grades||{}); return [a.store,a.date,a.auditor,a.manager,fmt(final),...secs.map(fmt),...Array.from({length:TOTAL},(_,i)=>(a.grades||{})[i+1]??""),a.plan,Object.values(a.photos||{}).flat().length].map(q).join(","); }));
+  const url=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"})); const a=document.createElement("a"); a.href=url; a.download=`store-audits-${today()}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+let dbState="loading", slow=false;
+async function loadHist(){
+  if(!sb){ dbState="off"; renderHist(); return; }
+  const timer=setTimeout(()=>{ slow=true; renderHist(); },10000);
+  const {data,error}=await sb.from(CONFIG.TABLE).select("id,created_at,data").order("created_at",{ascending:false}).limit(500);
+  clearTimeout(timer); slow=false;
+  if(error){ dbState=audits.length?"ready":"off"; renderHist(); return; }
+  audits=data.map(r=>Object.assign({},r.data||{},{id:String(r.id),submittedAt:r.created_at}));
+  dbState="ready"; renderHist(); if(openId){ if(audits.some(a=>a.id===openId)) showDetail(openId); else closeDetail(); }
+}
+if(sb){
+  db=sb;
+  assets={
+    upload: async(blob,opt)=>{
+      const ext=(opt&&opt.type==="image/png")?"png":"jpg";
+      const path=`${today()}/${(crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2))}.${ext}`;
+      const {error}=await sb.storage.from(CONFIG.BUCKET).upload(path,blob,{contentType:(opt&&opt.type)||"image/jpeg",upsert:false});
+      if(error) throw {code:/size|large/i.test(error.message)?"too_large":"upstream_error",message:error.message};
+      return {id:path};
+    },
+    delete: async()=>({deleted:false})
+  };
+  assetsState="ready"; $("b-csv").hidden=false;
+} else { assetsState="off"; }
+$("tab-hist").addEventListener("click",()=>loadHist());
+loadHist();
+
+applyText(); fillFields(); buildForm(); renderHist();
+</script>
+</body>
+</html>
